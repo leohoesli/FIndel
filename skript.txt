@@ -1,0 +1,198 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Given values
+discharge = 0.1  # estimate [meters^3 second^-1]
+discharge_max = 0.22  # from measurement [meters^3 second^-1]
+main_discharge = 5 # estimate for Findelbach [meters^3 second^-1]
+delta_T_main = 0.7
+specific_heat_capacity = 4184  # JkgK (specific heat capacity of water)
+latent_heat_of_fusion_ice = 334000  # Latent heat of fusion for ice (J/kg)
+rho_ice = 917 #density of ice [kg meter^-]
+rho_water = 1000 #density of water [kg meter^-3]
+area_findel = 13870000 #Area of Findelgletscher (GLAMOS) [m^2]
+geotherm_findel = 70 #Geothermal Heat Flux [W/m^2]
+#define path, replace \ with / when copying from explorer
+df = pd.read_csv('C:/Users/leoho/Documents/1_Ausbildung/ETH/MA/1_Data/2_Field23/230929_Findel/1_Temperature/1_IMS.csv')
+
+df['Datum'] = pd.to_datetime(df['Datum'], format='%d.%m.%Y %H:%M:%S')
+
+#Sort by 'Datum' column (already sorted)
+#df = df.sort_values(by='Datum')
+
+# start_timestamp = pd.Timestamp('07.07.2023 10:46:28')
+# end_timestamp = pd.Timestamp('29.09.2023 13:32:28')
+
+# plt.figure(figsize=(20, 6))  # Adjust the figure size as needed
+
+# plt.plot(df['Datum'], df['external'], marker='', linestyle='-')
+# plt.title('Water Temperatures Findelen')
+# plt.xlabel('Date')
+# plt.ylabel('Temperature [°C]')
+# plt.grid(True)
+
+# plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
+# plt.xlim(start_timestamp, end_timestamp)  # Set x-axis limits
+
+# date_range = pd.date_range(start=start_timestamp, end=end_timestamp, freq='W')
+# # Set the x-axis ticks to display a date every week
+# plt.xticks(date_range)
+
+# plt.tight_layout()  # Ensure the plot layout is tight
+# plt.show()
+
+#********1-hour average**********
+
+#Resample the data to calculate hourly averages
+# df.set_index('Datum', inplace=True)
+# hourly_avg = df['external'].resample('1H').mean()
+
+# plt.figure(figsize=(12, 6))
+
+# plt.plot(hourly_avg.index, hourly_avg.values, marker='o', linestyle='-')
+# plt.title('1-hour Averages Timeline')
+# plt.xlabel('Date')
+# plt.ylabel('1-hour Average Temperature')
+# plt.grid(True)
+
+# plt.xticks(rotation=45)
+# plt.tight_layout()
+# plt.show()
+
+#**********Diurnal Cycle*********
+
+# # Extract the time of day from the timestamp
+# df['time_of_day'] = df['Datum'].dt.strftime('%H:%M')  # Format as hh:mm
+
+# # Calculate the average measurement for each time of day
+# diurnal_avg = df.groupby('time_of_day')['external'].mean()
+
+# # Create a time range from 00:00 to 23:59
+# time_range = pd.date_range(start='10.07.2023 00:00:00', end='10.07.2023 23:59:00', freq='T')
+
+# # Create a corresponding list of time labels
+# time_labels = [str(time.time()) for time in time_range]
+
+# # Plot the average diurnal cycle
+# plt.figure(figsize=(12, 6))
+# plt.plot(time_labels, diurnal_avg, marker='o', linestyle='-')
+# plt.title('Average Diurnal Cycle of Water Temperatures')
+# plt.xlabel('Time of Day')
+# plt.ylabel('Temperature')
+# # Set x-axis ticks every 3 hours
+# plt.xticks(time_labels[::180], rotation=45)
+
+# plt.tight_layout()
+# plt.show()
+
+#*******Diurnal Cycle Variability*********
+# Extract the time of day from the timestamp
+# df['time_of_day'] = df['Datum'].dt.strftime('%H:%M')
+
+# # Group by time of day and calculate the minimum and maximum measurements
+# diurnal_min = df.groupby('time_of_day')['external'].min()
+# diurnal_max = df.groupby('time_of_day')['external'].max()
+# diurnal_avg = df.groupby('time_of_day')['external'].mean()
+
+# # Create a time range for a single day (e.g., '2023-01-01') from 00:00 to 23:59
+# time_range = pd.date_range(start='10.07.2023 00:00:00', end='10.07.2023 23:59:00', freq='T')
+
+# # Plot the diurnal cycle with lines for average, min, and max measurements
+# plt.figure(figsize=(12, 6))
+# plt.plot(time_range, diurnal_avg, color='black', label='Average Measurement')
+# plt.plot(time_range, diurnal_min, color='blue', alpha=0.5, label='Min Measurement')
+# plt.plot(time_range, diurnal_max, color='red', alpha=0.5, label='Max Measurement')
+# plt.fill_between(time_range, diurnal_min, diurnal_max, color='lightgray', alpha=0.5, label='Range')
+# plt.title('Diurnal Cycle with Average and Range of Measurements', fontsize=28)
+# plt.xlabel('Time of Day', fontsize=16)
+# plt.ylabel('Measurement', )
+# plt.legend()
+
+# plt.tight_layout()
+# plt.show()
+
+#********Boxplot diurnal cycle**************
+
+#Convert the 'timestamp' column to a datetime format if not already done
+# df['Datum'] = pd.to_datetime(df['Datum'])
+
+# # Extract the hour of the day from the timestamp
+# df['hour_of_day'] = df['Datum'].dt.hour
+
+# # Calculate the average measurement for each hour of the day
+# hourly_avg = df.groupby('hour_of_day')['external'].mean()
+
+# # Create a box plot to visualize the variability
+# plt.figure(figsize=(12, 6))
+# sns.boxplot(x='hour_of_day', y='external', data=df, showfliers=False, color='#007acc')
+# plt.title('Hourly Variability of Measurements')
+# plt.xlabel('Hour of the Day')
+# plt.ylabel('Average Measurement')
+
+# plt.tight_layout()
+# plt.show()
+
+
+#******Energy*********
+#Calculate the energy change for each time step
+# df['energy'] = discharge * 1000 * 60 * specific_heat_capacity * df['external'] / 1000000 #convert discharge from m^3 to kg, over 60 seconds, in MJ
+
+#Plot the energy change over time
+# plt.figure(figsize=(12, 6))
+# plt.plot(df['Datum'], df['energy'], marker='', linestyle='-')
+# plt.title('Energy Change Over Time')
+# plt.xlabel('Datum')
+# plt.ylabel('Available Energy [MJ]')
+# plt.grid(True)
+# plt.xticks(rotation=45)
+
+# plt.tight_layout()
+# plt.show()
+
+#********Energy Calculations******
+
+timespan_sec = df['external'].count() * 60 #timespan of measurements in seconds
+#timespan_sec = 90*24*60*60 #90 days
+
+temperature_avg = df['external'].mean()
+energy_ims = discharge * rho_water * timespan_sec * specific_heat_capacity * temperature_avg #convert discharge into kg, energy in J
+energy_ims_GJ = f"{energy_ims /1000000000:.2f}" #Energy in GJ, 2 decimal places
+
+print(f"-Total available energy for ice melt is: {energy_ims_GJ} GJ")
+
+melted_mass = energy_ims / latent_heat_of_fusion_ice
+melted_mass_r = f"{melted_mass:.2f}" #rounded
+melted_volume = melted_mass / rho_ice
+melted_volume_r = f"{melted_volume:.2f}" #rounded
+
+print(f"-Total ice melt in is {melted_mass_r} kg or {melted_volume_r} m^3")
+
+mass_balance_ims = melted_mass / rho_water / area_findel
+mass_balance_ims_r = f"{mass_balance_ims:.3f}" #rounded
+
+print(f"-Total ice melt in meters water equivalent is {mass_balance_ims_r} m w.e.")
+
+delta_T_pot = energy_ims / (main_discharge * rho_water * specific_heat_capacity * timespan_sec) # potential dT of main stream
+delta_T_pot_r = f"{delta_T_pot:.2f}"
+print(f"-The energy input from the IMS can heat up the main meltwater stream by {delta_T_pot_r} K.")
+
+# energy_heatup = main_discharge * rho_water * specific_heat_capacity * delta_T_main * 60 # energy required to heat up Findelbach by 0.5°C over 60s
+# energy_heatup_r = f"{energy_heatup:.2f}" #rounded
+# energy_heatup_total = main_discharge * rho_water * specific_heat_capacity * delta_T_main * timespan_sec # energy required to heat up Findelbach by 0.5°C over entire timeperiod
+# energy_heatup_total_r = f"{energy_heatup_total:.2f}" #rounded
+# heatup_percent = energy_heatup_total / energy_ims * 100
+# heatup_percent_r = f"{heatup_percent:.2f}" #rounded
+
+# print(f"-Total energy required to heat up Findelbach by 0.5°C for 1 minute is {energy_heatup_r} J. For the entire time period: {energy_heatup_total_r} J. This is {heatup_percent_r}% of the total available energy")
+
+#Geothermal Heat Flux (rough)
+energy_ghf = geotherm_findel * area_findel * timespan_sec #Energy [J]
+ratio_ghf_ims = energy_ims /  energy_ghf *100
+ratio_ghf_ims_r = f"{ratio_ghf_ims:.2f}"
+
+print(f"-The ratio betwen energy from the IMS and GHF is {ratio_ghf_ims_r}%.")
+
+
+
+# -*- coding: utf-8 -*-
